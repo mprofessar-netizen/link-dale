@@ -14,29 +14,28 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             padding: 10px;
             text-align: center;
         }
 
-        /* Restart Button (Top Right) */
+        /* RESTART BUTTON (Ab ye sabse upar dikhega) */
         #restart-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #ff9800;
+            background-color: #ff9800; /* Orange */
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 10px 20px;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
-            z-index: 10;
+            font-size: 16px;
+            margin-bottom: 20px;
+            display: block; /* Hamesha dikhega */
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
         }
 
-        /* Fake Video Player Box */
+        /* Fake Player */
         #ad-player-box {
             width: 100%;
             max-width: 400px;
@@ -49,7 +48,6 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 25px;
-            position: relative;
             background-image: url('https://img.icons8.com/ios-filled/100/444444/video.png'); 
             background-repeat: no-repeat;
             background-position: center;
@@ -64,8 +62,6 @@
             border-radius: 50px;
             font-size: 20px;
             font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
             animation: pulse 1.5s infinite;
         }
 
@@ -78,7 +74,7 @@
         /* Timer Box */
         #timer-box {
             display: none;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             color: #ffcc00;
             margin-bottom: 20px;
@@ -87,40 +83,30 @@
             border-radius: 10px;
             border: 1px solid #444;
             width: 90%;
-            max-width: 350px;
         }
 
-        /* Status Messages */
-        #status-text {
-            color: #aaa;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .error-text {
-            color: #ff4444;
-            font-weight: bold;
+        .status-text {
             display: block;
-            margin-top: 5px;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #ccc;
         }
 
         /* Input Section */
         #input-section {
             display: none;
             width: 100%;
-            max-width: 400px;
         }
 
         input {
             width: 80%;
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #444;
             background: #222;
             color: white;
+            border: 1px solid #555;
             margin-bottom: 15px;
             font-size: 16px;
-            outline: none;
             text-align: center;
         }
 
@@ -132,127 +118,112 @@
             border-radius: 8px;
             font-size: 18px;
             font-weight: bold;
-            cursor: pointer;
             width: 90%;
         }
     </style>
 </head>
 <body>
 
-    <button id="restart-btn" onclick="location.reload()">🔄 Restart</button>
+    <button id="restart-btn" onclick="location.reload()">🔄 Restart (Click if Stuck)</button>
 
     <div id="ad-player-box" onclick="startAdFlow()">
         <button id="play-btn">▶️ Play Video</button>
-        <p id="player-msg" style="color: #777; margin-top: 10px;">Click to Verify</p>
+        <p style="margin-top:10px; color:#888;">Click to Watch Ad</p>
     </div>
 
     <div id="timer-box">
-        ⏳ Remaining: <span id="time">30</span>s
-        <div id="status-text">Go to Ad Tab and wait...</div>
+        ⏳ Time Left: <span id="time">30</span>s
+        <span id="status-msg" class="status-text">Go to the Ad Page...</span>
     </div>
 
     <div id="input-section">
-        <h3 style="color: #4CAF50;">✅ Task Verified!</h3>
-        <input type="text" id="userLink" placeholder="Paste Telegram Link here...">
+        <h3 style="color: #4CAF50;">✅ Task Complete!</h3>
+        <input type="text" id="userLink" placeholder="Paste Link Here...">
         <br>
         <button class="submit-btn" onclick="submitLink()">🚀 Submit Link</button>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const BOT_USERNAME = "Baymaxl_bot"; 
         const ADSTERRA_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
-        const REQUIRED_TIME = 30; // Seconds
+        const REQUIRED_SECONDS = 30;
 
-        // Elements
-        const playerBox = document.getElementById("ad-player-box");
-        const playBtn = document.getElementById("play-btn");
-        const timerBox = document.getElementById("timer-box");
-        const timeSpan = document.getElementById("time");
-        const statusText = document.getElementById("status-text");
-        const inputSection = document.getElementById("input-section");
-        const restartBtn = document.getElementById("restart-btn");
-
-        let isAdStarted = false;
-        let endTime = 0;
-        let timerInterval;
+        let endTime = null;
+        let interval = null;
 
         function startAdFlow() {
-            if (isAdStarted) return;
-            isAdStarted = true;
+            if (endTime) return; // Already started
 
-            // 1. Calculate Target Time (Abhi ka time + 30 seconds)
-            // Date.now() gives milliseconds, so we add 30 * 1000
-            endTime = Date.now() + (REQUIRED_TIME * 1000);
+            // 1. Set Target Time (Current Time + 30 Sec)
+            // Hum browser ke internal clock use kar rahe hain
+            endTime = new Date().getTime() + (REQUIRED_SECONDS * 1000);
 
             // 2. Open Ad
             window.open(ADSTERRA_LINK, '_blank');
 
-            // 3. Update UI
-            playBtn.style.display = "none";
-            document.getElementById("player-msg").innerText = "Checking...";
-            playerBox.style.opacity = "0.3";
-            playerBox.style.pointerEvents = "none";
-            timerBox.style.display = "block";
+            // 3. UI Update
+            document.getElementById("play-btn").style.display = "none";
+            document.getElementById("ad-player-box").style.opacity = "0.3";
+            document.getElementById("ad-player-box").style.pointerEvents = "none";
+            document.getElementById("timer-box").style.display = "block";
+            document.getElementById("restart-btn").style.display = "block";
 
-            // 4. Start Clock Checker
-            timerInterval = setInterval(checkTime, 500); // Check every half second
+            // 4. Start Checking
+            interval = setInterval(checkStatus, 500);
         }
 
-        function checkTime() {
-            // Abhi ka time nikalo
-            const now = Date.now();
+        function checkStatus() {
+            const now = new Date().getTime();
+            const distance = endTime - now;
             
-            // Kitna time bacha hai? (Target - Abhi)
-            const remaining = Math.ceil((endTime - now) / 1000);
+            // Calculate seconds remaining
+            const secondsLeft = Math.ceil(distance / 1000);
 
-            if (remaining <= 0) {
-                // Time Pura Ho Gaya!
-                clearInterval(timerInterval);
-                timeSpan.innerText = "0";
-                statusText.innerText = "Completed!";
-                statusText.style.color = "#4CAF50";
+            if (distance < 0) {
+                // Time Complete!
+                clearInterval(interval);
+                document.getElementById("time").innerText = "0";
+                document.getElementById("status-msg").innerText = "Completed!";
+                document.getElementById("status-msg").style.color = "#4CAF50";
                 
                 // Show Input
                 setTimeout(() => {
-                    timerBox.style.display = "none";
-                    playerBox.style.display = "none";
-                    restartBtn.style.display = "none"; // Hide restart on success
-                    inputSection.style.display = "block";
-                }, 1000);
+                    document.getElementById("timer-box").style.display = "none";
+                    document.getElementById("ad-player-box").style.display = "none";
+                    document.getElementById("restart-btn").style.display = "none";
+                    document.getElementById("input-section").style.display = "block";
+                }, 500);
             } else {
-                // Time Bacha Hai
-                timeSpan.innerText = remaining;
+                // Update Time
+                document.getElementById("time").innerText = secondsLeft;
                 
-                // Check if user is looking at page or not
+                // Check if user is on this tab
                 if (document.hidden) {
-                    statusText.innerText = "Watching Ad... (Good)";
-                    statusText.style.color = "#4CAF50";
-                    timerBox.style.borderColor = "#4CAF50";
+                     document.getElementById("status-msg").innerText = "Watching Ad... (Good)";
+                     document.getElementById("status-msg").style.color = "#4CAF50";
                 } else {
-                    // User wapas aa gaya lekin time bacha hai
-                    // Calculat kitna time wait kiya
-                    const waited = REQUIRED_TIME - remaining;
-                    statusText.innerHTML = `<span class="error-text">❌ Too Early! You only waited ${waited}s.<br>Go back to Ad or Wait here ${remaining}s more.</span>`;
-                    timerBox.style.borderColor = "red";
+                     document.getElementById("status-msg").innerText = `⚠️ Go back to Ad! Wait ${secondsLeft}s more.`;
+                     document.getElementById("status-msg").style.color = "#ff4444";
                 }
             }
         }
 
+        // Jab User wapas aaye, turant check karo
+        document.addEventListener("visibilitychange", function() {
+            if (!document.hidden && endTime) {
+                checkStatus();
+            }
+        });
+
         function submitLink() {
             let link = document.getElementById("userLink").value;
-            if (!link || link.length < 3) {
-                alert("Please paste a link first!");
-                return;
-            }
-            let cleanLink = link.replace("https://t.me/", "").replace("@", "");
-            const tg = window.Telegram.WebApp;
-            tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=${cleanLink}`);
-            tg.close();
+            if (!link || link.length < 3) { alert("Link missing!"); return; }
+            let clean = link.replace("https://t.me/", "").replace("@", "");
+            window.Telegram.WebApp.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=${clean}`);
+            window.Telegram.WebApp.close();
         }
 
         window.Telegram.WebApp.expand();
     </script>
-
 </body>
 </html>
