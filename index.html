@@ -7,7 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             background-color: #000000;
             color: white;
             display: flex;
@@ -18,6 +18,22 @@
             margin: 0;
             padding: 10px;
             text-align: center;
+        }
+
+        /* Restart Button (Top Right) */
+        #restart-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
         }
 
         /* Fake Video Player Box */
@@ -38,7 +54,6 @@
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         #play-btn {
@@ -52,7 +67,6 @@
             cursor: pointer;
             box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
             animation: pulse 1.5s infinite;
-            z-index: 2;
         }
 
         @keyframes pulse {
@@ -64,7 +78,7 @@
         /* Timer Box */
         #timer-box {
             display: none;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: #ffcc00;
             margin-bottom: 20px;
@@ -76,12 +90,18 @@
             max-width: 350px;
         }
 
-        /* Warning Text */
-        .warning-text {
-            color: #ff4444;
+        /* Status Messages */
+        #status-text {
+            color: #aaa;
             font-size: 14px;
             margin-top: 5px;
-            display: none;
+        }
+
+        .error-text {
+            color: #ff4444;
+            font-weight: bold;
+            display: block;
+            margin-top: 5px;
         }
 
         /* Input Section */
@@ -115,28 +135,24 @@
             cursor: pointer;
             width: 90%;
         }
-
-        .status-text {
-            color: #aaa;
-            margin-top: 10px;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
 
+    <button id="restart-btn" onclick="location.reload()">🔄 Restart</button>
+
     <div id="ad-player-box" onclick="startAdFlow()">
         <button id="play-btn">▶️ Play Video</button>
-        <p class="status-text" id="status-msg">Click to Watch Ad & Verify</p>
+        <p id="player-msg" style="color: #777; margin-top: 10px;">Click to Verify</p>
     </div>
 
     <div id="timer-box">
-        ⏳ Timer: <span id="time">30</span>s
-        <div id="warning-msg" class="warning-text">⚠️ Go back to Ad page to continue timer!</div>
+        ⏳ Remaining: <span id="time">30</span>s
+        <div id="status-text">Go to Ad Tab and wait...</div>
     </div>
 
     <div id="input-section">
-        <h3 style="color: #4CAF50;">✅ Verified!</h3>
+        <h3 style="color: #4CAF50;">✅ Task Verified!</h3>
         <input type="text" id="userLink" placeholder="Paste Telegram Link here...">
         <br>
         <button class="submit-btn" onclick="submitLink()">🚀 Submit Link</button>
@@ -146,73 +162,81 @@
         // --- CONFIGURATION ---
         const BOT_USERNAME = "Baymaxl_bot"; 
         const ADSTERRA_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
+        const REQUIRED_TIME = 30; // Seconds
 
         // Elements
         const playerBox = document.getElementById("ad-player-box");
         const playBtn = document.getElementById("play-btn");
-        const statusMsg = document.getElementById("status-msg");
         const timerBox = document.getElementById("timer-box");
         const timeSpan = document.getElementById("time");
-        const warningMsg = document.getElementById("warning-msg");
+        const statusText = document.getElementById("status-text");
         const inputSection = document.getElementById("input-section");
+        const restartBtn = document.getElementById("restart-btn");
 
         let isAdStarted = false;
-        let timeLeft = 30;
+        let endTime = 0;
         let timerInterval;
 
         function startAdFlow() {
             if (isAdStarted) return;
             isAdStarted = true;
 
-            // Open Adsterra
+            // 1. Calculate Target Time (Abhi ka time + 30 seconds)
+            // Date.now() gives milliseconds, so we add 30 * 1000
+            endTime = Date.now() + (REQUIRED_TIME * 1000);
+
+            // 2. Open Ad
             window.open(ADSTERRA_LINK, '_blank');
 
-            // UI Changes
+            // 3. Update UI
             playBtn.style.display = "none";
-            statusMsg.innerText = "Checking Ad View...";
+            document.getElementById("player-msg").innerText = "Checking...";
             playerBox.style.opacity = "0.3";
             playerBox.style.pointerEvents = "none";
             timerBox.style.display = "block";
 
-            // Start Anti-Cheat Timer
-            startSmartTimer();
+            // 4. Start Clock Checker
+            timerInterval = setInterval(checkTime, 500); // Check every half second
         }
 
-        function startSmartTimer() {
-            timerInterval = setInterval(() => {
-                // LOGIC: Agar User is page par dekh raha hai (document.hidden is false)
-                // To timer mat chalao. Agar user dusre tab (Ad) par hai (document.hidden is true)
-                // To timer chalao.
-                
-                // Note: Mobile browsers me behavior thoda alag hota hai, 
-                // isliye hum simplified "Focus Check" use karenge.
-                
-                // Simple Logic: Timer runs ALWAYS, but if user is HERE, we warn them.
-                // Wait, user wants strictness.
-                
-                // STRICT MODE LOGIC:
-                if (document.hidden) {
-                    // User is on AD tab (Good)
-                    timeLeft--;
-                    timeSpan.innerText = timeLeft;
-                    // Warning hatao
-                    warningMsg.style.display = "none";
-                    timerBox.style.borderColor = "#ffcc00";
-                } else {
-                    // User is on THIS tab (Bad - Cheating)
-                    // Don't decrease time
-                    warningMsg.style.display = "block";
-                    warningMsg.innerText = "❌ Don't close Ad! Go back to Ad tab!";
-                    timerBox.style.borderColor = "red";
-                }
+        function checkTime() {
+            // Abhi ka time nikalo
+            const now = Date.now();
+            
+            // Kitna time bacha hai? (Target - Abhi)
+            const remaining = Math.ceil((endTime - now) / 1000);
 
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
+            if (remaining <= 0) {
+                // Time Pura Ho Gaya!
+                clearInterval(timerInterval);
+                timeSpan.innerText = "0";
+                statusText.innerText = "Completed!";
+                statusText.style.color = "#4CAF50";
+                
+                // Show Input
+                setTimeout(() => {
                     timerBox.style.display = "none";
                     playerBox.style.display = "none";
+                    restartBtn.style.display = "none"; // Hide restart on success
                     inputSection.style.display = "block";
+                }, 1000);
+            } else {
+                // Time Bacha Hai
+                timeSpan.innerText = remaining;
+                
+                // Check if user is looking at page or not
+                if (document.hidden) {
+                    statusText.innerText = "Watching Ad... (Good)";
+                    statusText.style.color = "#4CAF50";
+                    timerBox.style.borderColor = "#4CAF50";
+                } else {
+                    // User wapas aa gaya lekin time bacha hai
+                    // Calculat kitna time wait kiya
+                    const waited = REQUIRED_TIME - remaining;
+                    statusText.innerHTML = `<span class="error-text">❌ Too Early! You only waited ${waited}s.<br>Go back to Ad or Wait here ${remaining}s more.</span>`;
+                    timerBox.style.borderColor = "red";
                 }
-            }, 1000);
+            }
         }
 
         function submitLink() {
