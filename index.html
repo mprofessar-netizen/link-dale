@@ -3,224 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification</title>
+    <title>Link Verify</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #000000;
+            font-family: sans-serif;
+            background-color: #000;
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
             padding: 10px;
             text-align: center;
         }
 
-        /* RESTART BUTTON (Ab ye sabse upar dikhega) */
-        #restart-btn {
-            background-color: #ff9800; /* Orange */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+        /* Warning Box */
+        .warning {
+            background: #ff9800;
+            color: black;
+            padding: 15px;
+            border-radius: 8px;
             font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
             margin-bottom: 20px;
-            display: block; /* Hamesha dikhega */
-            box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+            border: 2px solid white;
+            animation: blink 2s infinite;
         }
 
+        @keyframes blink { 0% {opacity:1;} 50% {opacity:0.8;} 100% {opacity:1;} }
+
         /* Fake Player */
-        #ad-player-box {
+        #player {
             width: 100%;
-            max-width: 400px;
-            height: 250px;
-            background-color: #111;
+            max-width: 350px;
+            height: 200px;
+            background: #111;
             border: 2px solid #333;
             border-radius: 12px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 25px;
-            background-image: url('https://img.icons8.com/ios-filled/100/444444/video.png'); 
-            background-repeat: no-repeat;
-            background-position: center;
             cursor: pointer;
+            margin-bottom: 20px;
         }
 
         #play-btn {
-            background-color: #ff0000;
+            background: red;
             color: white;
-            padding: 15px 40px;
+            padding: 10px 30px;
             border: none;
             border-radius: 50px;
             font-size: 20px;
             font-weight: bold;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Timer Box */
-        #timer-box {
-            display: none;
-            font-size: 22px;
-            font-weight: bold;
-            color: #ffcc00;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #222;
-            border-radius: 10px;
-            border: 1px solid #444;
-            width: 90%;
-        }
-
-        .status-text {
-            display: block;
-            margin-top: 10px;
-            font-size: 16px;
-            color: #ccc;
         }
 
         /* Input Section */
-        #input-section {
+        #input-box {
             display: none;
             width: 100%;
+            max-width: 350px;
         }
 
         input {
-            width: 80%;
+            width: 90%;
             padding: 15px;
-            border-radius: 8px;
             background: #222;
             color: white;
             border: 1px solid #555;
-            margin-bottom: 15px;
-            font-size: 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
             text-align: center;
+            font-size: 16px;
         }
 
-        button.submit-btn {
-            background-color: #2481cc;
+        .btn {
+            background: #2481cc;
             color: white;
-            padding: 15px 30px;
+            padding: 15px;
+            width: 100%;
             border: none;
             border-radius: 8px;
             font-size: 18px;
             font-weight: bold;
-            width: 90%;
+            cursor: pointer;
         }
+
+        #loading { display: none; color: #aaa; font-size: 18px; }
+        #success { display: none; color: #4CAF50; font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <button id="restart-btn" onclick="location.reload()">🔄 Restart (Click if Stuck)</button>
+    <div class="warning">⚠️ CLICK PLAY & WAIT 30 SECONDS!</div>
 
-    <div id="ad-player-box" onclick="startAdFlow()">
+    <div id="player" onclick="openAd()">
         <button id="play-btn">▶️ Play Video</button>
-        <p style="margin-top:10px; color:#888;">Click to Watch Ad</p>
     </div>
 
-    <div id="timer-box">
-        ⏳ Time Left: <span id="time">30</span>s
-        <span id="status-msg" class="status-text">Go to the Ad Page...</span>
+    <p id="loading">Verifying... ⏳</p>
+
+    <div id="input-box">
+        <h3 style="color:#4CAF50">✅ Unlocked!</h3>
+        <input type="text" id="link" placeholder="Paste Link Here...">
+        <button class="btn" onclick="send()">🚀 SUBMIT</button>
     </div>
 
-    <div id="input-section">
-        <h3 style="color: #4CAF50;">✅ Task Complete!</h3>
-        <input type="text" id="userLink" placeholder="Paste Link Here...">
-        <br>
-        <button class="submit-btn" onclick="submitLink()">🚀 Submit Link</button>
-    </div>
+    <div id="success">✅ Sent! Closing...</div>
 
     <script>
-        const BOT_USERNAME = "Baymaxl_bot"; 
-        const ADSTERRA_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
-        const REQUIRED_SECONDS = 30;
+        const BOT = "Baymaxl_bot";
+        const AD_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
+        let clicked = false;
 
-        let endTime = null;
-        let interval = null;
-
-        function startAdFlow() {
-            if (endTime) return; // Already started
-
-            // 1. Set Target Time (Current Time + 30 Sec)
-            // Hum browser ke internal clock use kar rahe hain
-            endTime = new Date().getTime() + (REQUIRED_SECONDS * 1000);
-
-            // 2. Open Ad
-            window.open(ADSTERRA_LINK, '_blank');
-
-            // 3. UI Update
-            document.getElementById("play-btn").style.display = "none";
-            document.getElementById("ad-player-box").style.opacity = "0.3";
-            document.getElementById("ad-player-box").style.pointerEvents = "none";
-            document.getElementById("timer-box").style.display = "block";
-            document.getElementById("restart-btn").style.display = "block";
-
-            // 4. Start Checking
-            interval = setInterval(checkStatus, 500);
-        }
-
-        function checkStatus() {
-            const now = new Date().getTime();
-            const distance = endTime - now;
+        function openAd() {
+            if(clicked) return;
+            clicked = true;
+            window.open(AD_LINK, '_blank');
             
-            // Calculate seconds remaining
-            const secondsLeft = Math.ceil(distance / 1000);
+            document.getElementById("player").style.display = "none";
+            document.querySelector(".warning").style.display = "none";
+            document.getElementById("loading").style.display = "block";
 
-            if (distance < 0) {
-                // Time Complete!
-                clearInterval(interval);
-                document.getElementById("time").innerText = "0";
-                document.getElementById("status-msg").innerText = "Completed!";
-                document.getElementById("status-msg").style.color = "#4CAF50";
-                
-                // Show Input
-                setTimeout(() => {
-                    document.getElementById("timer-box").style.display = "none";
-                    document.getElementById("ad-player-box").style.display = "none";
-                    document.getElementById("restart-btn").style.display = "none";
-                    document.getElementById("input-section").style.display = "block";
-                }, 500);
-            } else {
-                // Update Time
-                document.getElementById("time").innerText = secondsLeft;
-                
-                // Check if user is on this tab
-                if (document.hidden) {
-                     document.getElementById("status-msg").innerText = "Watching Ad... (Good)";
-                     document.getElementById("status-msg").style.color = "#4CAF50";
-                } else {
-                     document.getElementById("status-msg").innerText = `⚠️ Go back to Ad! Wait ${secondsLeft}s more.`;
-                     document.getElementById("status-msg").style.color = "#ff4444";
-                }
-            }
+            // 3 Second Wait
+            setTimeout(() => {
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("input-box").style.display = "block";
+            }, 3000);
         }
 
-        // Jab User wapas aaye, turant check karo
-        document.addEventListener("visibilitychange", function() {
-            if (!document.hidden && endTime) {
-                checkStatus();
-            }
-        });
-
-        function submitLink() {
-            let link = document.getElementById("userLink").value;
-            if (!link || link.length < 3) { alert("Link missing!"); return; }
-            let clean = link.replace("https://t.me/", "").replace("@", "");
-            window.Telegram.WebApp.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=${clean}`);
-            window.Telegram.WebApp.close();
+        function send() {
+            let val = document.getElementById("link").value;
+            if(!val || val.length < 3) { alert("Link dalo bhai!"); return; }
+            
+            let clean = val.replace("https://t.me/", "").replace("@", "");
+            const tg = window.Telegram.WebApp;
+            tg.openTelegramLink(`https://t.me/${BOT}?start=${clean}`);
+            
+            document.getElementById("input-box").style.display = "none";
+            document.getElementById("success").style.display = "block";
+            setTimeout(() => { tg.close(); }, 1500);
         }
 
         window.Telegram.WebApp.expand();
