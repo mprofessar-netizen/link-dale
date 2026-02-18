@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Video to Submit</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+
+        /* Fake Video Player Box */
+        #ad-player-box {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            background-color: #111;
+            border: 2px solid #333;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+            background-image: url('https://img.icons8.com/ios-filled/100/444444/video.png'); 
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+        }
+
+        /* Play Button Style */
+        #play-btn {
+            background-color: #ff0000; /* YouTube Red */
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Timer Style (Initially Hidden) */
+        #timer-box {
+            display: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            padding: 10px 30px;
+            border: 2px solid #ffcc00;
+            border-radius: 50px;
+            background: #1a1a1a;
+        }
+
+        /* Input Section (Initially Hidden) */
+        #input-section {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        input {
+            width: 80%;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 15px;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+        }
+
+        button.submit-btn {
+            background-color: #2481cc;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 90%;
+        }
+
+        .status-text {
+            color: #aaa;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ad-player-box" onclick="startAdFlow()">
+        <button id="play-btn">▶️ Play Video Ad</button>
+        <p class="status-text" id="status-msg">Click Play to verify & unlock</p>
+    </div>
+
+    <div id="timer-box">⏳ Watching... <span id="time">30</span>s</div>
+
+    <div id="input-section">
+        <h3 style="color: #4CAF50;">✅ Verification Complete!</h3>
+        <input type="text" id="userLink" placeholder="Paste your Telegram Link here...">
+        <br>
+        <button class="submit-btn" onclick="submitLink()">🚀 Submit Link</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const BOT_USERNAME = "Baymaxl_bot"; 
+        const ADSTERRA_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
+
+        // Elements
+        const playerBox = document.getElementById("ad-player-box");
+        const playBtn = document.getElementById("play-btn");
+        const statusMsg = document.getElementById("status-msg");
+        const timerBox = document.getElementById("timer-box");
+        const timeSpan = document.getElementById("time");
+        const inputSection = document.getElementById("input-section");
+
+        let isAdStarted = false;
+
+        // Function: Jab user Play dabayega
+        function startAdFlow() {
+            if (isAdStarted) return; // Already running
+            isAdStarted = true;
+
+            // 1. Open Adsterra Link in New Tab
+            window.open(ADSTERRA_LINK, '_blank');
+
+            // 2. Change UI
+            playBtn.style.display = "none";
+            statusMsg.innerText = "Video playing in new tab...";
+            playerBox.style.opacity = "0.5";
+            playerBox.style.pointerEvents = "none"; // Disable clicking again
+
+            // 3. Start Timer
+            timerBox.style.display = "block";
+            let timeLeft = 30;
+
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timeSpan.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    // Timer khatam -> Show Input
+                    timerBox.style.display = "none";
+                    playerBox.style.display = "none"; // Hide player
+                    inputSection.style.display = "block"; // Show Input
+                }
+            }, 1000);
+        }
+
+        // Function: Jab user Link Submit karega
+        function submitLink() {
+            let link = document.getElementById("userLink").value;
+
+            if (!link || link.length < 3) {
+                alert("Please paste a link first!");
+                return;
+            }
+
+            // Clean Link
+            let cleanLink = link.replace("https://t.me/", "").replace("@", "");
+
+            // Open Telegram Bot
+            const tg = window.Telegram.WebApp;
+            tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=${cleanLink}`);
+            tg.close();
+        }
+
+        // Initialize Telegram WebApp
+        window.Telegram.WebApp.expand();
+    </script>
+
+</body>
+</html>
