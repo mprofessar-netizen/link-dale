@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch Video to Submit</title>
+    <title>Verification</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #000000;
             color: white;
             display: flex;
@@ -17,6 +17,7 @@
             height: 100vh;
             margin: 0;
             padding: 10px;
+            text-align: center;
         }
 
         /* Fake Video Player Box */
@@ -37,11 +38,11 @@
             background-repeat: no-repeat;
             background-position: center;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        /* Play Button Style */
         #play-btn {
-            background-color: #ff0000; /* YouTube Red */
+            background-color: #ff0000;
             color: white;
             padding: 15px 40px;
             border: none;
@@ -49,8 +50,9 @@
             font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
             animation: pulse 1.5s infinite;
+            z-index: 2;
         }
 
         @keyframes pulse {
@@ -59,32 +61,43 @@
             100% { transform: scale(1); }
         }
 
-        /* Timer Style (Initially Hidden) */
+        /* Timer Box */
         #timer-box {
             display: none;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: #ffcc00;
             margin-bottom: 20px;
-            padding: 10px 30px;
-            border: 2px solid #ffcc00;
-            border-radius: 50px;
-            background: #1a1a1a;
+            padding: 15px;
+            background: #222;
+            border-radius: 10px;
+            border: 1px solid #444;
+            width: 90%;
+            max-width: 350px;
         }
 
-        /* Input Section (Initially Hidden) */
+        /* Warning Text */
+        .warning-text {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* Input Section */
         #input-section {
             display: none;
             width: 100%;
             max-width: 400px;
-            text-align: center;
         }
 
         input {
             width: 80%;
             padding: 15px;
             border-radius: 8px;
-            border: none;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
             margin-bottom: 15px;
             font-size: 16px;
             outline: none;
@@ -113,15 +126,18 @@
 <body>
 
     <div id="ad-player-box" onclick="startAdFlow()">
-        <button id="play-btn">▶️ Play Video Ad</button>
-        <p class="status-text" id="status-msg">Click Play to verify & unlock</p>
+        <button id="play-btn">▶️ Play Video</button>
+        <p class="status-text" id="status-msg">Click to Watch Ad & Verify</p>
     </div>
 
-    <div id="timer-box">⏳ Watching... <span id="time">30</span>s</div>
+    <div id="timer-box">
+        ⏳ Timer: <span id="time">30</span>s
+        <div id="warning-msg" class="warning-text">⚠️ Go back to Ad page to continue timer!</div>
+    </div>
 
     <div id="input-section">
-        <h3 style="color: #4CAF50;">✅ Verification Complete!</h3>
-        <input type="text" id="userLink" placeholder="Paste your Telegram Link here...">
+        <h3 style="color: #4CAF50;">✅ Verified!</h3>
+        <input type="text" id="userLink" placeholder="Paste Telegram Link here...">
         <br>
         <button class="submit-btn" onclick="submitLink()">🚀 Submit Link</button>
     </div>
@@ -137,61 +153,80 @@
         const statusMsg = document.getElementById("status-msg");
         const timerBox = document.getElementById("timer-box");
         const timeSpan = document.getElementById("time");
+        const warningMsg = document.getElementById("warning-msg");
         const inputSection = document.getElementById("input-section");
 
         let isAdStarted = false;
+        let timeLeft = 30;
+        let timerInterval;
 
-        // Function: Jab user Play dabayega
         function startAdFlow() {
-            if (isAdStarted) return; // Already running
+            if (isAdStarted) return;
             isAdStarted = true;
 
-            // 1. Open Adsterra Link in New Tab
+            // Open Adsterra
             window.open(ADSTERRA_LINK, '_blank');
 
-            // 2. Change UI
+            // UI Changes
             playBtn.style.display = "none";
-            statusMsg.innerText = "Video playing in new tab...";
-            playerBox.style.opacity = "0.5";
-            playerBox.style.pointerEvents = "none"; // Disable clicking again
-
-            // 3. Start Timer
+            statusMsg.innerText = "Checking Ad View...";
+            playerBox.style.opacity = "0.3";
+            playerBox.style.pointerEvents = "none";
             timerBox.style.display = "block";
-            let timeLeft = 30;
 
-            const countdown = setInterval(() => {
-                timeLeft--;
-                timeSpan.innerText = timeLeft;
+            // Start Anti-Cheat Timer
+            startSmartTimer();
+        }
+
+        function startSmartTimer() {
+            timerInterval = setInterval(() => {
+                // LOGIC: Agar User is page par dekh raha hai (document.hidden is false)
+                // To timer mat chalao. Agar user dusre tab (Ad) par hai (document.hidden is true)
+                // To timer chalao.
+                
+                // Note: Mobile browsers me behavior thoda alag hota hai, 
+                // isliye hum simplified "Focus Check" use karenge.
+                
+                // Simple Logic: Timer runs ALWAYS, but if user is HERE, we warn them.
+                // Wait, user wants strictness.
+                
+                // STRICT MODE LOGIC:
+                if (document.hidden) {
+                    // User is on AD tab (Good)
+                    timeLeft--;
+                    timeSpan.innerText = timeLeft;
+                    // Warning hatao
+                    warningMsg.style.display = "none";
+                    timerBox.style.borderColor = "#ffcc00";
+                } else {
+                    // User is on THIS tab (Bad - Cheating)
+                    // Don't decrease time
+                    warningMsg.style.display = "block";
+                    warningMsg.innerText = "❌ Don't close Ad! Go back to Ad tab!";
+                    timerBox.style.borderColor = "red";
+                }
 
                 if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    // Timer khatam -> Show Input
+                    clearInterval(timerInterval);
                     timerBox.style.display = "none";
-                    playerBox.style.display = "none"; // Hide player
-                    inputSection.style.display = "block"; // Show Input
+                    playerBox.style.display = "none";
+                    inputSection.style.display = "block";
                 }
             }, 1000);
         }
 
-        // Function: Jab user Link Submit karega
         function submitLink() {
             let link = document.getElementById("userLink").value;
-
             if (!link || link.length < 3) {
                 alert("Please paste a link first!");
                 return;
             }
-
-            // Clean Link
             let cleanLink = link.replace("https://t.me/", "").replace("@", "");
-
-            // Open Telegram Bot
             const tg = window.Telegram.WebApp;
             tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=${cleanLink}`);
             tg.close();
         }
 
-        // Initialize Telegram WebApp
         window.Telegram.WebApp.expand();
     </script>
 
