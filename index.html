@@ -3,150 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Verify</title>
+    <title>Premium Link Submit</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* --- GLOBAL STYLES --- */
         body {
-            font-family: sans-serif;
-            background-color: #000;
-            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #050505; /* Deepest Black */
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%); /* subtle vignette */
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- WARNING BOX (Top) --- */
+        .warning-glow {
+            color: #ff3333;
+            text-transform: uppercase;
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            padding: 10px 20px;
+            border: 2px solid #ff3333;
+            box-shadow: 0 0 15px #ff3333;
             text-align: center;
+            animation: pulseWarning 2s infinite alternate;
+        }
+        @keyframes pulseWarning {
+             0% { box-shadow: 0 0 10px #ff3333; opacity: 0.8; }
+             100% { box-shadow: 0 0 25px #ff3333; opacity: 1; }
         }
 
-        /* Warning Box */
-        .warning {
-            background: #ff9800;
-            color: black;
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            border: 2px solid white;
-            animation: blink 2s infinite;
-        }
-
-        @keyframes blink { 0% {opacity:1;} 50% {opacity:0.8;} 100% {opacity:1;} }
-
-        /* Fake Player */
-        #player {
+        /* --- MAIN 3D GLOW BUTTON (LINK DALE) --- */
+        #main-action-btn {
+            background: linear-gradient(145deg, #111, #222); /* Dark gradient inside */
+            color: #00f7ff; /* Neon Cyan Text */
+            font-size: 24px;
+            font-weight: 800;
+            padding: 25px 40px;
+            border: 3px solid #00f7ff; /* The glowing border line */
+            border-radius: 12px;
+            cursor: pointer;
             width: 100%;
             max-width: 350px;
-            height: 200px;
-            background: #111;
-            border: 2px solid #333;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            /* 3D Effect Shadows + Border Glow */
+            box-shadow: 
+                0 0 20px rgba(0, 247, 255, 0.5), /* Outer Glow */
+                0 10px 20px rgba(0, 0, 0, 0.5);  /* 3D Shadow beneath */
+            transition: all 0.3s ease;
+            transform: translateY(-5px); /* Lifted up initially */
         }
 
-        #play-btn {
-            background: red;
-            color: white;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 50px;
+        #main-action-btn:active {
+            transform: translateY(2px); /* Pressed down */
+            box-shadow: 
+                0 0 10px rgba(0, 247, 255, 0.7),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- LOADING TEXT --- */
+        #loading-text {
+            display: none;
+            color: #00f7ff;
             font-size: 20px;
             font-weight: bold;
+            margin-top: 20px;
+            text-shadow: 0 0 10px #00f7ff;
         }
 
-        /* Input Section */
-        #input-box {
-            display: none;
+        /* --- INPUT SECTION CONTAINER --- */
+        #input-section {
+            display: none; /* Hidden initially */
             width: 100%;
-            max-width: 350px;
+            max-width: 400px; /* Thoda choda */
+            animation: fadeIn 0.5s ease-in-out;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        input {
-            width: 90%;
-            padding: 15px;
-            background: #222;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .btn {
-            background: #2481cc;
-            color: white;
-            padding: 15px;
+        /* --- GLOWING INPUT BOX --- */
+        .premium-input {
             width: 100%;
-            border: none;
-            border-radius: 8px;
+            padding: 18px; /* Bada size */
             font-size: 18px;
-            font-weight: bold;
+            background-color: #111;
+            color: #fff;
+            border: 2px solid #bc13fe; /* Purple/Pink Border */
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            outline: none;
+            box-sizing: border-box; /* Important for padding */
+            /* Purple Glow on Border */
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.5);
+            transition: box-shadow 0.3s ease;
+        }
+        .premium-input:focus {
+            box-shadow: 0 0 25px rgba(188, 19, 254, 0.8); /* Intense glow on focus */
+        }
+        ::placeholder { color: #666; opacity: 1; }
+
+        /* --- PREMIUM SUBMIT BUTTON --- */
+        .premium-submit-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            /* Premium Gradient Background */
+            background: linear-gradient(90deg, #00c6ff, #0072ff, #bc13fe);
+            background-size: 200% auto;
+            border: none;
+            border-radius: 10px;
             cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+            transition: all 0.3s ease;
+            animation: gradientShift 3s infinite linear;
+        }
+        @keyframes gradientShift { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+
+        .premium-submit-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 114, 255, 0.4);
+        }
+        
+        /* --- SUCCESS MESSAGE --- */
+        #success-msg {
+            display: none;
+            color: #00f7ff;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00f7ff;
+            margin-top: 20px;
         }
 
-        #loading { display: none; color: #aaa; font-size: 18px; }
-        #success { display: none; color: #4CAF50; font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="warning">⚠️ CLICK PLAY & WAIT 30 SECONDS!</div>
-
-    <div id="player" onclick="openAd()">
-        <button id="play-btn">▶️ Play Video</button>
+    <div class="warning-glow" id="warning-box">
+        ⚠️ Click ke baad 30 second rukein!
     </div>
 
-    <p id="loading">Verifying... ⏳</p>
+    <button id="main-action-btn" onclick="handleMainClick()">
+        🚀 LINK DALE
+    </button>
 
-    <div id="input-box">
-        <h3 style="color:#4CAF50">✅ Unlocked!</h3>
-        <input type="text" id="link" placeholder="Paste Link Here...">
-        <button class="btn" onclick="send()">🚀 SUBMIT</button>
+    <p id="loading-text">Verifying... ⏳</p>
+
+    <div id="input-section">
+        <input type="text" id="userLink" class="premium-input" placeholder="Apka message/Link dale">
+        
+        <button class="premium-submit-btn" onclick="submitLink()">
+            ✅ Submit Now
+        </button>
     </div>
-
-    <div id="success">✅ Sent! Closing...</div>
+    
+    <div id="success-msg">
+        🎉 Link Successfully Sent!
+    </div>
 
     <script>
-        const BOT = "Baymaxl_bot";
-        const AD_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
-        let clicked = false;
+        // --- SETTINGS ---
+        const BOT_USERNAME = "Baymaxl_bot"; 
+        const ADSTERRA_LINK = "https://www.effectivegatecpm.com/dhgty15yfe?key=68374b26e438b0e7cca7ba36137eafd2";
+        
+        let isProcessing = false;
 
-        function openAd() {
-            if(clicked) return;
-            clicked = true;
-            window.open(AD_LINK, '_blank');
-            
-            document.getElementById("player").style.display = "none";
-            document.querySelector(".warning").style.display = "none";
-            document.getElementById("loading").style.display = "block";
+        function handleMainClick() {
+            if (isProcessing) return;
+            isProcessing = true;
 
-            // 3 Second Wait
+            // 1. Open Ad
+            window.open(ADSTERRA_LINK, '_blank');
+
+            // 2. UI Update (Hide Button & Warning, Show Loading)
+            document.getElementById("main-action-btn").style.display = "none";
+            document.getElementById("warning-box").style.display = "none";
+            document.getElementById("loading-text").style.display = "block";
+
+            // 3. Wait 3 Seconds then show Input
             setTimeout(() => {
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("input-box").style.display = "block";
-            }, 3000);
+                document.getElementById("loading-text").style.display = "none";
+                document.getElementById("input-section").style.display = "block";
+            }, 3000); 
         }
 
-        function send() {
-            let val = document.getElementById("link").value;
-            if(!val || val.length < 3) { alert("Link dalo bhai!"); return; }
+        function submitLink() {
+            let link = document.getElementById("userLink").value;
+            if (!link || link.length < 2) { alert("Kuch likho to sahi!"); return; }
             
-            let clean = val.replace("https://t.me/", "").replace("@", "");
+            // Clean Link (optional, depends on what you want to allow)
+            let clean = link.replace("https://t.me/", "").replace("@", "");
+            
+            // Open Telegram Bot with data
             const tg = window.Telegram.WebApp;
-            tg.openTelegramLink(`https://t.me/${BOT}?start=${clean}`);
+            tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=${clean}`);
             
-            document.getElementById("input-box").style.display = "none";
-            document.getElementById("success").style.display = "block";
-            setTimeout(() => { tg.close(); }, 1500);
+            // Hide Input & Show Success
+            document.getElementById("input-section").style.display = "none";
+            document.getElementById("success-msg").style.display = "block";
+            
+            // Close WebApp after 1.5 sec
+            setTimeout(() => {
+                tg.close();
+            }, 1500);
         }
 
+        // Initialize Telegram WebApp
         window.Telegram.WebApp.expand();
+        // Set header color to match bg
+        window.Telegram.WebApp.setHeaderColor('#050505'); 
     </script>
 </body>
 </html>
